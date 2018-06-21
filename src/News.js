@@ -7,7 +7,7 @@ class News extends Component {
     super(options)
     this.state = {}
   }
-  componentDidMount() {
+  componentWillMount() {
     axios({
         baseURL: process.env.REACT_APP_API,
         url: '/news',
