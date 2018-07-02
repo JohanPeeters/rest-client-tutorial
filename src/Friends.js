@@ -15,22 +15,25 @@ class Friends extends Component {
     this.state = {}
     this.handleSubmit = this.handleSubmit.bind(this)
   }
+  callAPI = (accessToken) => {
+    axios({
+      baseURL: process.env.REACT_APP_API,
+      url: '/friends',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`
+          }
+      })
+      .then((res) => {
+        this.setState({
+          message: res.data
+        })
+      })
+  }
   componentWillMount() {
     (window.location.hash &&
       this.webAuth.parseHash((err, authResult) => {
         if (authResult && authResult.accessToken) {
-          axios({
-            baseURL: process.env.REACT_APP_API,
-            url: '/friends',
-                headers: {
-                  'Authorization': `Bearer ${authResult.accessToken}`
-                }
-            })
-            .then((res) => {
-              this.setState({
-                message: res.data
-              })
-            })
+            this.callAPI(authResult.accessToken)
           }
         }
       )
@@ -38,11 +41,22 @@ class Friends extends Component {
   }
   handleSubmit = (e) => {
     e.preventDefault()
-    this.webAuth.authorize({
+    this.webAuth.checkSession({
       responseType: 'token id_token',
       audience: 'backend',
       scope: 'read:friends'
-    })
+    }, (err, authResult) => {
+      if (err)
+        this.webAuth.authorize({
+          responseType: 'token id_token',
+          audience: 'backend',
+          scope: 'read:friends'
+        })
+        if (authResult && authResult.accessToken) {
+          this.callAPI(authResult.accessToken)
+        }
+      }
+    )
   }
   render() {
     return(
